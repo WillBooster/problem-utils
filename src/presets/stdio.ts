@@ -62,6 +62,21 @@ export async function stdioPreset(problemDir: string): Promise<void> {
   // `CI` changes affects Chainlit. `FORCE_COLOR` affects Bun.
   const env = { ...process.env, CI: '', FORCE_COLOR: '0' };
 
+  if (languageDefinition.prebuild) {
+    try {
+      await languageDefinition.prebuild(params.cwd);
+    } catch (error) {
+      console.error('prebuild error', error);
+
+      printTestCaseResult({
+        testCaseId: testCases[0]?.id ?? 'prebuild',
+        decisionCode: DecisionCode.BUILD_ERROR,
+        stderr: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+  }
+
   if (languageDefinition.buildCommand) {
     try {
       const buildCommand = languageDefinition.buildCommand(mainFilePath);

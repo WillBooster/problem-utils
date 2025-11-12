@@ -5,6 +5,8 @@ import { languageIdToDefinition } from '../types/language.js';
 // The last is most prioritized.
 const PRIOTIZED_MAIN_FILE_NAMES = ['index', 'main'] as const;
 
+const IGNORED_FILE_EXTENSIONS = ['.DS_Store', '.class'];
+
 export async function findMainFile(cwd: string, language?: string | readonly string[]): Promise<string | undefined> {
   const fileExtensions =
     language && [language].flat().flatMap((language) => languageIdToDefinition[language]?.fileExtension ?? []);
@@ -14,6 +16,7 @@ export async function findMainFile(cwd: string, language?: string | readonly str
 
   for (const dirent of await fs.promises.readdir(cwd, { withFileTypes: true })) {
     if (!dirent.isFile()) continue;
+    if (IGNORED_FILE_EXTENSIONS.some((ext) => dirent.name.endsWith(ext))) continue;
     if (fileExtensions && !fileExtensions.some((ext) => dirent.name.endsWith(ext))) continue;
 
     const direntPrioryty = PRIOTIZED_MAIN_FILE_NAMES.findLastIndex((name) =>

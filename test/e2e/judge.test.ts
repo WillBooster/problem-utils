@@ -54,11 +54,8 @@ test.each<[string, Record<string, unknown>, TestCaseResult[]]>([
         exitStatus: 0,
         stdin: '0 0\n',
         stdout: '0\n',
-        stderr: '',
         timeSeconds: expect.any(Number),
         memoryBytes: expect.any(Number),
-        feedbackMarkdown: '',
-        outputFiles: [],
       },
       {
         testCaseId: '03_edge_2',

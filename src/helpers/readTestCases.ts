@@ -12,11 +12,11 @@ export async function readTestCases(dir: string): Promise<{ id: string; stdin?: 
     const { ext, name } = path.parse(dirent.name);
     if (ext !== '.in' && ext !== '.out') continue;
 
-    const content = await fs.promises.readFile(path.join(dir, dirent.name), 'utf8');
+    const text = await fs.promises.readFile(path.join(dirent.parentPath, dirent.name), 'utf8');
 
     idSet.add(name);
-    if (ext === '.in') idToStdin.set(name, content);
-    if (ext === '.out') idToStdout.set(name, content);
+    if (ext === '.in') idToStdin.set(name, text);
+    if (ext === '.out') idToStdout.set(name, text);
   }
 
   return [...idSet].toSorted().map((id) => ({ id, stdin: idToStdin.get(id), stdout: idToStdout.get(id) }));

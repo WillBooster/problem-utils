@@ -83,12 +83,30 @@ const acceptedTestCaseResultsForAPlusB = [
   },
 ] as const satisfies readonly TestCaseResult[];
 
-test.each<[string, Record<string, unknown>, readonly TestCaseResult[]]>([
-  ['example/a_plus_b', { cwd: 'model_answers/java' }, acceptedTestCaseResultsForAPlusB],
-  ['example/a_plus_b', { cwd: 'model_answers/python' }, acceptedTestCaseResultsForAPlusB],
-  ['example/a_plus_b', { cwd: 'test_answers/java_rename' }, acceptedTestCaseResultsForAPlusB],
+test.each<[string, string, Record<string, unknown>, readonly TestCaseResult[]]>([
   [
     'example/a_plus_b',
+    'debug.ts',
+    { cwd: 'model_answers/java', stdin: '1 1' },
+    [
+      {
+        testCaseId: 'debug',
+        decisionCode: 2000,
+        exitStatus: 0,
+        stdin: '1 1',
+        stdout: '2\n',
+        timeSeconds: expect.any(Number),
+        memoryBytes: expect.any(Number),
+      },
+    ],
+  ],
+
+  ['example/a_plus_b', 'judge.ts', { cwd: 'model_answers/java' }, acceptedTestCaseResultsForAPlusB],
+  ['example/a_plus_b', 'judge.ts', { cwd: 'model_answers/python' }, acceptedTestCaseResultsForAPlusB],
+  ['example/a_plus_b', 'judge.ts', { cwd: 'test_answers/java_rename' }, acceptedTestCaseResultsForAPlusB],
+  [
+    'example/a_plus_b',
+    'judge.ts',
     { cwd: 'test_answers/python_fpe' },
     [
       {
@@ -108,6 +126,7 @@ test.each<[string, Record<string, unknown>, readonly TestCaseResult[]]>([
   ],
   [
     'example/a_plus_b',
+    'judge.ts',
     { cwd: 'test_answers/python_rpe' },
     [
       {
@@ -123,6 +142,7 @@ test.each<[string, Record<string, unknown>, readonly TestCaseResult[]]>([
   ],
   [
     'example/a_plus_b',
+    'judge.ts',
     { cwd: 'test_answers/python_tle' },
     [
       {
@@ -155,6 +175,7 @@ test.each<[string, Record<string, unknown>, readonly TestCaseResult[]]>([
   ],
   [
     'example/a_plus_b',
+    'judge.ts',
     { cwd: 'test_answers/python_wa' },
     [
       {
@@ -186,13 +207,13 @@ test.each<[string, Record<string, unknown>, readonly TestCaseResult[]]>([
       },
     ],
   ],
-])('%s %j', { timeout: 10_000 }, async (cwd, params, expectedTestCaseResults) => {
+])('%s %s %j', { timeout: 10_000, concurrent: true }, async (cwd, scriptFilename, params, expectedTestCaseResults) => {
   // The target files may be changed during the judging, so clone it before testing.
   await fs.promises.mkdir('temp', { recursive: true });
   const tempDir = await fs.promises.mkdtemp(path.join('temp', 'judge_'));
   await fs.promises.cp(cwd, tempDir, { recursive: true });
 
-  const spawnResult = child_process.spawnSync('bun', ['judge.ts', JSON.stringify(params)], {
+  const spawnResult = child_process.spawnSync('bun', [scriptFilename, JSON.stringify(params)], {
     cwd: tempDir,
     encoding: 'utf8',
   });

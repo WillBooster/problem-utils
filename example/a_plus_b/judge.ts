@@ -1,3 +1,3 @@
-import { stdioJudgePreset } from 'judge-utils/presets/stdio';
+import { stdioJudgePreset } from '@exercode/problem-utils/presets/stdio';
 
 await stdioJudgePreset(import.meta.dirname);

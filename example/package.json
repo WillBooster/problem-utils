@@ -5,7 +5,7 @@
   "sideEffects": false,
   "type": "module",
   "dependencies": {
-    "judge-utils": "file:.."
+    "@exercode/problem-utils": "file:.."
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.1",

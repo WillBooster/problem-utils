@@ -25,17 +25,17 @@ export interface LanguageDefinition {
 
 const cLikeGrammer = {
   strings: [
-    { open: /'/, close: /'/ },
-    { open: /"/, close: /"/ },
+    { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+    { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
   ],
   comments: [{ open: /\n?[ \t]*\/\*/, close: /\*\// }, { open: /\n?[ \t]*\/\// }],
 } as const satisfies LanguageDefinition['grammer'];
 
 const javaScriptLikeGrammer = {
   strings: [
-    { open: /'/, close: /'/ },
-    { open: /"/, close: /"/ },
-    { open: /`/, close: /`/ },
+    { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+    { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
+    { open: /`/, close: /(?<!\\)(?:\\{2})*`/ },
   ],
   comments: [{ open: /\n?[ \t]*\/\*/, close: /\*\// }, { open: /\n?[ \t]*\/\// }],
 } as const satisfies LanguageDefinition['grammer'];
@@ -113,8 +113,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: () => ['./main'],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [{ open: /\n?[ \t]*\{-/, close: /-\}/ }, { open: /\n?[ \t]*--/ }],
     },
@@ -125,8 +125,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: (fileName) => ['php', fileName],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [{ open: /\n?[ \t]*\/\*/, close: /\*\// }, { open: /\n?[ \t]*\/\// }, { open: /\n?[ \t]*#/ }],
     },
@@ -137,10 +137,10 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: (fileName) => ['python3', fileName],
     grammer: {
       strings: [
-        { open: /'''/, close: /'''/ },
-        { open: /"""/, close: /"""/ },
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'''/, close: /(?<!\\)(?:\\{2})*'''/ },
+        { open: /"""/, close: /(?<!\\)(?:\\{2})*"""/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [
         { open: /\n?[ \t]*'''/, close: /'''/ },
@@ -156,8 +156,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: (fileName) => ['ruby', '--jit', fileName],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [{ open: /\n?[ \t]*=begin/, close: /=end/ }, { open: /\n?[ \t]*#/ }],
     },
@@ -193,8 +193,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: () => ['echo', ''],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [{ open: /\n?[ \t]*<!--/, close: /-->/ }],
     },
@@ -205,8 +205,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: () => ['echo', ''],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [{ open: /\n?[ \t]*\/\*/, close: /\*\// }],
     },
@@ -217,8 +217,8 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     command: () => ['echo', ''],
     grammer: {
       strings: [
-        { open: /'/, close: /'/ },
-        { open: /"/, close: /"/ },
+        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
+        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
       ],
       comments: [
         { open: /\n?[ \t]*<!--/, close: /-->/ },

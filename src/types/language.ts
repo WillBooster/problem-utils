@@ -187,45 +187,4 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
     fileExtensions: ['.txt'],
     command: (fileName) => ['cat', fileName],
   },
-
-  html: {
-    fileExtensions: ['.html'],
-    command: () => ['echo', ''],
-    grammer: {
-      strings: [
-        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
-        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
-      ],
-      comments: [{ open: /\n?[ \t]*<!--/, close: /-->/ }],
-    },
-  },
-
-  css: {
-    fileExtensions: ['.css'],
-    command: () => ['echo', ''],
-    grammer: {
-      strings: [
-        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
-        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
-      ],
-      comments: [{ open: /\n?[ \t]*\/\*/, close: /\*\// }],
-    },
-  },
-
-  jsp: {
-    fileExtensions: ['.jsp'],
-    command: () => ['echo', ''],
-    grammer: {
-      strings: [
-        { open: /'/, close: /(?<!\\)(?:\\{2})*'/ },
-        { open: /"/, close: /(?<!\\)(?:\\{2})*"/ },
-      ],
-      comments: [
-        { open: /\n?[ \t]*<!--/, close: /-->/ },
-        { open: /\n?[ \t]*<%--/, close: /--%>/ },
-        { open: /\n?[ \t]*\/\*/, close: /\*\// },
-        { open: /\n?[ \t]*\/\// },
-      ],
-    },
-  },
 } as const;

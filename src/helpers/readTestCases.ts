@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export async function readTestCases(dir: string): Promise<{ id: string; stdin?: string; stdout?: string }[]> {
+export async function readTestCases(directory: string): Promise<{ id: string; stdin?: string; stdout?: string }[]> {
   const idSet = new Set<string>();
   const idToStdin = new Map<string, string>();
   const idToStdout = new Map<string, string>();
 
-  for (const dirent of await fs.promises.readdir(dir, { withFileTypes: true })) {
+  for (const dirent of await fs.promises.readdir(directory, { withFileTypes: true })) {
     if (!dirent.isFile()) continue;
 
     const { ext, name } = path.parse(dirent.name);

@@ -5,12 +5,15 @@ import { DecisionCode } from '../types/decisionCode.js';
 import type { ProblemMarkdownFrontMatter } from '../types/problem.js';
 import type { TestCaseResult } from '../types/testCaseResult.js';
 
-import { deleteCommentsInSourceCode } from './deleteCommentsInSourceCode.js';
-import { getLanguageDefinitionByFilename } from './getLanguageDefinitionByFilename.js';
+import { findLanguageDefinitionByPath } from './findLanguageDefinitionByPath.js';
+import { removeCommentsInSourceCode } from './removeCommentsInSourceCode.js';
 
 export async function judgeByStaticAnalysis(
   cwd: string,
-  problemMarkdownFrontMatter: ProblemMarkdownFrontMatter
+  problemMarkdownFrontMatterLike: Pick<
+    ProblemMarkdownFrontMatter,
+    'forbiddenRegExpsInCode' | 'forbiddenTextsInCode' | 'requiredRegExpsInCode'
+  >
 ): Promise<Pick<TestCaseResult, 'decisionCode' | 'feedbackMarkdown'> | undefined> {
   const sourceCodeWithoutCommentFiles: { path: string; data: string }[] = [];
 
@@ -21,24 +24,24 @@ export async function judgeByStaticAnalysis(
     const isBinary = text.includes('\uFFFD');
     if (isBinary) continue;
 
-    const languageDefinition = getLanguageDefinitionByFilename(dirent.name);
+    const languageDefinition = findLanguageDefinitionByPath(dirent.name);
     if (!languageDefinition) continue;
 
     sourceCodeWithoutCommentFiles.push({
       path: dirent.name,
-      data: languageDefinition.grammer ? deleteCommentsInSourceCode(languageDefinition.grammer, text) : text,
+      data: languageDefinition.grammer ? removeCommentsInSourceCode(languageDefinition.grammer, text) : text,
     });
   }
 
   const forbiddenFounds: { pattern: string; path: string; match: string }[] = [];
 
   for (const file of sourceCodeWithoutCommentFiles) {
-    for (const pattern of problemMarkdownFrontMatter.forbiddenRegExpsInCode ?? []) {
+    for (const pattern of problemMarkdownFrontMatterLike.forbiddenRegExpsInCode ?? []) {
       const re = new RegExp(pattern, 'g');
       const mathces = file.data.matchAll(re);
       for (const match of mathces) forbiddenFounds.push({ pattern: re.toString(), path: file.path, match: match[0] });
     }
-    for (const pattern of problemMarkdownFrontMatter.forbiddenTextsInCode ?? []) {
+    for (const pattern of problemMarkdownFrontMatterLike.forbiddenTextsInCode ?? []) {
       let p = 0;
       while (p < file.data.length) {
         const index = file.data.indexOf(pattern, p);
@@ -64,7 +67,7 @@ ${forbiddenFounds.map((f) => `| \`${f.path}\` | \`${f.pattern}\` | \`${f.match}\
 
   const missingRequiredPatterns: string[] = [];
 
-  for (const pattern of problemMarkdownFrontMatter.requiredRegExpsInCode ?? []) {
+  for (const pattern of problemMarkdownFrontMatterLike.requiredRegExpsInCode ?? []) {
     const re = new RegExp(pattern);
     const isFound = sourceCodeWithoutCommentFiles.some((f) => re.test(f.data));
     if (!isFound) missingRequiredPatterns.push(re.toString());

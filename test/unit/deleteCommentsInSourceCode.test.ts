@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 
-import { deleteCommentsInSourceCode } from '../../src/helpers/deleteCommentsInSourceCode.js';
+import { removeCommentsInSourceCode } from '../../src/helpers/removeCommentsInSourceCode.js';
 import { languageIdToDefinition } from '../../src/types/language.js';
 
 test.each<[string, string, string]>([
@@ -240,5 +240,5 @@ header {
 ])('%s', (language, sourceCode, expected) => {
   const languageDefinition = languageIdToDefinition[language];
   assert(languageDefinition?.grammer);
-  expect(deleteCommentsInSourceCode(languageDefinition.grammer, sourceCode)).toEqual(expected);
+  expect(removeCommentsInSourceCode(languageDefinition.grammer, sourceCode)).toEqual(expected);
 });

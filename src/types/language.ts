@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { deleteCommentsInSourceCode } from '../helpers/deleteCommentsInSourceCode.js';
+import { removeCommentsInSourceCode } from '../helpers/removeCommentsInSourceCode.js';
 
 export interface LanguageDefinition {
   /** File extensions to judge with this config. */
@@ -91,7 +91,7 @@ export const languageIdToDefinition: Readonly<Record<string, Readonly<LanguageDe
       for (const dirent of await fs.promises.readdir(cwd, { withFileTypes: true })) {
         if (!dirent.isFile() || !dirent.name.endsWith('.java')) continue;
         const data = await fs.promises.readFile(path.join(cwd, dirent.name), 'utf8');
-        const [, className] = publicClassRegex.exec(deleteCommentsInSourceCode(cLikeGrammer, data)) ?? [];
+        const [, className] = publicClassRegex.exec(removeCommentsInSourceCode(cLikeGrammer, data)) ?? [];
         if (className) await fs.promises.rename(path.join(cwd, dirent.name), path.join(cwd, `${className}.java`));
       }
     },

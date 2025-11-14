@@ -3,11 +3,14 @@ import fs from 'node:fs';
 import { languageIdToDefinition } from '../types/language.js';
 
 // The last is most prioritized.
-const PRIOTIZED_MAIN_FILE_NAMES = ['index', 'main'] as const;
+const PRIOTIZED_FILE_NAMES = ['index', 'main'] as const;
 
-const IGNORED_FILE_EXTENSIONS = ['.DS_Store', '.class'];
+const IGNORED_FILE_EXTENSIONS = ['.DS_Store', '.class'] as const;
 
-export async function findMainFile(cwd: string, language?: string | readonly string[]): Promise<string | undefined> {
+export async function findEntryPointFile(
+  cwd: string,
+  language?: string | readonly string[]
+): Promise<string | undefined> {
   const fileExtensions =
     language && [language].flat().flatMap((language) => languageIdToDefinition[language]?.fileExtensions ?? []);
 
@@ -19,7 +22,7 @@ export async function findMainFile(cwd: string, language?: string | readonly str
     if (IGNORED_FILE_EXTENSIONS.some((ext) => dirent.name.endsWith(ext))) continue;
     if (fileExtensions && !fileExtensions.some((ext) => dirent.name.endsWith(ext))) continue;
 
-    const direntPrioryty = PRIOTIZED_MAIN_FILE_NAMES.findLastIndex((name) =>
+    const direntPrioryty = PRIOTIZED_FILE_NAMES.findLastIndex((name) =>
       dirent.name.toLowerCase().startsWith(`${name}.`)
     );
 

@@ -1,6 +1,9 @@
 import type { TestCaseResult } from '../types/testCaseResult.js';
 import { TEST_CASE_RESULT_PREFIX } from '../types/testCaseResult.js';
 
+/**
+ * Print a test case result in a format that can be read by the judge server.
+ */
 export function printTestCaseResult(result: TestCaseResult): void {
   console.info(`${TEST_CASE_RESULT_PREFIX}${JSON.stringify(result)}`);
 }

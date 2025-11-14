@@ -3,8 +3,8 @@ import path from 'node:path';
 import { z } from 'zod';
 
 import { compareStdoutAsSpaceSeparatedTokens } from '../helpers/compareStdoutAsSpaceSeparatedTokens.js';
-import { findMainFile } from '../helpers/findMainFile.js';
-import { getLanguageDefinitionByFilename } from '../helpers/getLanguageDefinitionByFilename.js';
+import { findEntryPointFile } from '../helpers/findEntryPointFile.js';
+import { findLanguageDefinitionByPath } from '../helpers/findLanguageDefinitionByPath.js';
 import { judgeByStaticAnalysis } from '../helpers/judgeByStaticAnalysis.js';
 import { parseArgs } from '../helpers/parseArgs.js';
 import { printTestCaseResult } from '../helpers/printTestCaseResult.js';
@@ -58,7 +58,7 @@ export async function stdioJudgePreset(problemDir: string): Promise<void> {
     return;
   }
 
-  const originalMainFilePath = await findMainFile(params.cwd, params.language);
+  const originalMainFilePath = await findEntryPointFile(params.cwd, params.language);
   if (!originalMainFilePath) {
     printTestCaseResult({
       testCaseId: testCases[0]?.id ?? 'prebuild',
@@ -68,7 +68,7 @@ export async function stdioJudgePreset(problemDir: string): Promise<void> {
     return;
   }
 
-  const languageDefinition = getLanguageDefinitionByFilename(originalMainFilePath);
+  const languageDefinition = findLanguageDefinitionByPath(originalMainFilePath);
   if (!languageDefinition) {
     printTestCaseResult({
       testCaseId: testCases[0]?.id ?? 'prebuild',
@@ -86,7 +86,7 @@ export async function stdioJudgePreset(problemDir: string): Promise<void> {
   if (languageDefinition.prebuild) {
     try {
       await languageDefinition.prebuild(params.cwd);
-      prebuiltMainFilePath = await findMainFile(params.cwd, params.language);
+      prebuiltMainFilePath = await findEntryPointFile(params.cwd, params.language);
     } catch (error) {
       console.error('prebuild error', error);
 
@@ -220,7 +220,7 @@ export async function stdioDebugPreset(problemDir: string): Promise<void> {
 
   const problemMarkdownFrontMatter = await readProblemMarkdownFrontMatter(problemDir);
 
-  const originalMainFilePath = await findMainFile(params.cwd, params.language);
+  const originalMainFilePath = await findEntryPointFile(params.cwd, params.language);
   if (!originalMainFilePath) {
     printTestCaseResult({
       testCaseId: 'prebuild',
@@ -230,7 +230,7 @@ export async function stdioDebugPreset(problemDir: string): Promise<void> {
     return;
   }
 
-  const languageDefinition = getLanguageDefinitionByFilename(originalMainFilePath);
+  const languageDefinition = findLanguageDefinitionByPath(originalMainFilePath);
   if (!languageDefinition) {
     printTestCaseResult({
       testCaseId: 'prebuild',
@@ -248,7 +248,7 @@ export async function stdioDebugPreset(problemDir: string): Promise<void> {
   if (languageDefinition.prebuild) {
     try {
       await languageDefinition.prebuild(params.cwd);
-      prebuiltMainFilePath = await findMainFile(params.cwd, params.language);
+      prebuiltMainFilePath = await findEntryPointFile(params.cwd, params.language);
     } catch (error) {
       console.error('prebuild error', error);
 

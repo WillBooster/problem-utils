@@ -1,6 +1,6 @@
 import type { LanguageDefinition } from '../types/language.js';
 
-export function deleteCommentsInSourceCode(
+export function removeCommentsInSourceCode(
   grammer: NonNullable<LanguageDefinition['grammer']>,
   sourceCode: string
 ): string {

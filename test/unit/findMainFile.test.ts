@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { expect, test } from 'vitest';
 
-import { findMainFile } from '../../src/helpers/findMainFile.js';
+import { findEntryPointFile } from '../../src/helpers/findEntryPointFile.js';
 
 test.each<[string | readonly string[] | undefined, readonly string[], string | undefined]>([
   [undefined, ['a.c', 'b.c', 'index.c', 'main.c', 'A.java', 'B.java', 'Index.java', 'Main.java'], 'main.c'],
@@ -17,6 +17,6 @@ test.each<[string | readonly string[] | undefined, readonly string[], string | u
   const tempDir = await fs.promises.mkdtemp(path.join('temp', 'findMainFile_'));
   for (const fileName of fileNames) await fs.promises.writeFile(path.join(tempDir, fileName), '');
 
-  const received = await findMainFile(tempDir, language);
+  const received = await findEntryPointFile(tempDir, language);
   expect(received).toBe(expected);
 });

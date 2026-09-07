@@ -19,6 +19,8 @@ export async function spawnWithTimeout(
   stderr: string;
   status: number | undefined;
   timeSeconds: number;
+  /** See `SpawnWithLimitsResult.cpuTimeSeconds`. */
+  cpuTimeSeconds: number;
   memoryBytes: number;
   outputLimitExceeded: boolean;
 }> {
@@ -34,16 +36,19 @@ export async function spawnWithTimeout(
     timeLimitSeconds: timeoutSeconds,
   });
 
-  // Keep GNU time's note about an abnormal exit (e.g. a segmentation fault) visible to the learner.
-  const stderr = result.timeCommandMessage
-    ? `${result.stderr}${result.stderr && !result.stderr.endsWith('\n') ? '\n' : ''}${result.timeCommandMessage}\n`
-    : result.stderr;
+  // Keep GNU time's note about an abnormal exit (e.g. a segmentation fault) visible to the learner;
+  // the note about `timeout`'s own exit status after ending the run says nothing to them.
+  const stderr =
+    result.timeCommandMessage && !result.timedOut
+      ? `${result.stderr}${result.stderr && !result.stderr.endsWith('\n') ? '\n' : ''}${result.timeCommandMessage}\n`
+      : result.stderr;
 
   return {
     stdout: result.stdout,
     stderr,
     status: result.timedOut || result.outputLimitExceeded ? 0 : result.status,
     timeSeconds: result.timedOut ? timeoutSeconds + 1e-3 : result.timeSeconds,
+    cpuTimeSeconds: result.cpuTimeSeconds,
     memoryBytes: result.memoryBytes,
     outputLimitExceeded: result.outputLimitExceeded,
   };

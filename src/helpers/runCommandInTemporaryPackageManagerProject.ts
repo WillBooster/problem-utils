@@ -14,6 +14,8 @@ export interface PackageManagerCommandRunResult {
   stderr: string;
   status: number | undefined;
   timeSeconds: number;
+  /** See `SpawnWithLimitsResult.cpuTimeSeconds`; the install's CPU time counts too. */
+  cpuTimeSeconds: number;
   memoryBytes: number;
   timedOut: boolean;
   signal: NodeJS.Signals | undefined;
@@ -127,6 +129,7 @@ export async function runCommandInTemporaryPackageManagerProject(
         stderr: installResult?.stderr ?? '',
         status: 0,
         timeSeconds: options.timeLimitSeconds + 1e-3,
+        cpuTimeSeconds: installResult?.cpuTimeSeconds ?? 0,
         memoryBytes: installResult?.memoryBytes ?? 0,
         timedOut: true,
         signal: installResult?.signal,
@@ -148,6 +151,7 @@ export async function runCommandInTemporaryPackageManagerProject(
         result: {
           ...result,
           timeSeconds: installResult.timeSeconds + result.timeSeconds,
+          cpuTimeSeconds: installResult.cpuTimeSeconds + result.cpuTimeSeconds,
           memoryBytes: Math.max(installResult.memoryBytes, result.memoryBytes),
         },
       });
@@ -170,6 +174,7 @@ function toPackageManagerCommandRunResult(context: {
     stderr: context.result.stderr,
     status: context.result.timedOut || context.result.outputLimitExceeded ? 0 : context.result.status,
     timeSeconds: context.result.timedOut ? context.options.timeLimitSeconds + 1e-3 : context.result.timeSeconds,
+    cpuTimeSeconds: context.result.cpuTimeSeconds,
     memoryBytes: context.result.memoryBytes,
     timedOut: context.result.timedOut,
     signal: context.result.signal,

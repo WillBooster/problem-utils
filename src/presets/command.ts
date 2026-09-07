@@ -60,6 +60,8 @@ export interface CommandRunResult {
   stderr: string;
   status: number | undefined;
   timeSeconds: number;
+  /** See `TestCaseResult.cpuTimeSeconds`; a custom `runCommand` may leave it out. */
+  cpuTimeSeconds?: number;
   memoryBytes: number;
   outputLimitExceeded?: boolean;
 }
@@ -362,6 +364,7 @@ async function runCommandJudgeForCwd<
       stdout: runResult.stdout.slice(0, limits.maxOutputLength) || undefined,
       stderr: (judgeResult.stderr ?? runResult.stderr).slice(0, limits.maxOutputLength) || undefined,
       timeSeconds: runResult.timeSeconds,
+      cpuTimeSeconds: runResult.cpuTimeSeconds,
       memoryBytes: runResult.memoryBytes,
       outputFiles: outputFiles.length > 0 ? outputFiles : undefined,
     });
@@ -397,6 +400,7 @@ async function runBuild(
       stdout: spawnResult.stdout.slice(0, context.limits.maxOutputLength),
       stderr: spawnResult.stderr.slice(0, context.limits.maxOutputLength),
       timeSeconds: spawnResult.timeSeconds,
+      cpuTimeSeconds: spawnResult.cpuTimeSeconds,
       memoryBytes: spawnResult.memoryBytes,
     };
   }
@@ -409,6 +413,7 @@ async function runBuild(
       stdout: spawnResult.stdout.slice(0, context.limits.maxOutputLength),
       stderr: spawnResult.stderr.slice(0, context.limits.maxOutputLength),
       timeSeconds: spawnResult.timeSeconds,
+      cpuTimeSeconds: spawnResult.cpuTimeSeconds,
       memoryBytes: spawnResult.memoryBytes,
     };
   }
@@ -425,6 +430,7 @@ async function runBuild(
       stdout: spawnResult.stdout.slice(0, context.limits.maxOutputLength),
       stderr: spawnResult.stderr.slice(0, context.limits.maxOutputLength),
       timeSeconds: spawnResult.timeSeconds,
+      cpuTimeSeconds: spawnResult.cpuTimeSeconds,
       memoryBytes: spawnResult.memoryBytes,
     };
   }
@@ -484,6 +490,7 @@ async function runCommand(
     stderr: spawnResult.stderr,
     status: spawnResult.status ?? undefined,
     timeSeconds: spawnResult.timeSeconds,
+    cpuTimeSeconds: spawnResult.cpuTimeSeconds,
     memoryBytes: spawnResult.memoryBytes,
     outputLimitExceeded: spawnResult.outputLimitExceeded,
   };

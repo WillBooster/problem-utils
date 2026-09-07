@@ -90,6 +90,42 @@ test('reports a timeout as time limit exceeded even if the program spawned a chi
   expect(result.timeSeconds).toBeGreaterThan(0.5);
 });
 
+test('reports the CPU time of a program that used up its time limit', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'while :; do :; done'], context, 1);
+
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(1);
+  // `timeout` ending the run must not lose GNU time's record, nor add its own exit status note to
+  // the program's stderr. The busy loop had the CPU for most of the limit; the bound only asks for
+  // a fifth of it, so a loaded CI host does not fail the test.
+  expect(result.cpuTimeSeconds).toBeGreaterThan(0.2);
+  expect(result.stderr).toBe('');
+});
+
+test('reports a timeout as time limit exceeded even if the program ignores SIGTERM', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'trap "" TERM; sleep 30'], context, 0.5);
+
+  // `timeout` had to SIGKILL the program after its grace period and exits with 137, not 124.
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(0.5);
+  expect(result.stderr).toBe('');
+});
+
+test('keeps the exit status 137 of a program that chose it just before the limit', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'sleep 0.4; exit 137'], context, 0.5);
+
+  expect(result.status).toBe(137);
+  expect(result.timeSeconds).toBeLessThan(0.5);
+});
+
+test('reports a near-zero CPU time of a program that slept past its time limit', async () => {
+  const result = await spawnWithTimeout('sleep', ['30'], context, 0.5);
+
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(0.5);
+  expect(result.cpuTimeSeconds).toBeLessThan(0.1);
+});
+
 test('preserves the exit status and stderr of the program', async () => {
   const result = await spawnWithTimeout('sh', ['-c', 'echo oops >&2; exit 7'], context, 5);
 

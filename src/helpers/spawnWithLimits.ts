@@ -16,7 +16,11 @@ export interface SpawnWithLimitsResult {
    * can tell a program that used up its time limit from one that waited for the CPU.
    */
   cpuTimeSeconds: number;
-  /** Peak resident set size measured by GNU time, or 0 when it produced no measurement. */
+  /**
+   * Peak resident set size measured by GNU time, or 0 when it produced no measurement. GNU time
+   * measures its child `timeout` and the descendants it waited for, so the value is at least
+   * `timeout`'s own footprint (about 1 MiB), which only shows for the smallest native programs.
+   */
   memoryBytes: number;
   /** The note GNU time adds when the command exits abnormally, e.g. `Command terminated by signal 11`. */
   timeCommandMessage: string | undefined;

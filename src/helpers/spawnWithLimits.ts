@@ -32,7 +32,8 @@ const killGracePeriodMilliseconds = 1000;
 const MIN_TIMEOUT_SECONDS = 0.001;
 // GNU `timeout` exits with 124 after ending a run at its limit, or with 128 + SIGKILL when the run
 // ignored its SIGTERM and it had to be killed after the grace period.
-const TIMEOUT_EXIT_STATUSES: ReadonlySet<number | undefined> = new Set([124, 137]);
+const TIMEOUT_EXIT_STATUS = 124;
+const KILLED_AFTER_TIMEOUT_EXIT_STATUS = 137;
 // GNU time writes its record to a file this process opened and unlinked at once, handed down as fd 3
 // of the command and reopened by GNU time through `/dev/fd`: the command runs as the same OS user,
 // so a record reachable by path could be swapped for a fake or for a FIFO that blocks the read.
@@ -220,15 +221,25 @@ export async function spawnWithLimits(
       cpuTimeSeconds: timeResult?.cpuTimeSeconds ?? 0,
       memoryBytes: timeResult?.memoryBytes ?? 0,
       timeCommandMessage: timeResult?.message,
-      // 124 is `timeout` reporting that it had to end the run itself, and 137 that the run ignored its
-      // SIGTERM and had to be killed after the grace period; unless the program exited with that
-      // status on its own before the limit.
-      timedOut: timedOut || (TIMEOUT_EXIT_STATUSES.has(status) && wallTimeSeconds >= context.timeLimitSeconds),
+      timedOut: timedOut || endedByTimeout(status, wallTimeSeconds, context.timeLimitSeconds),
       outputLimitExceeded,
     };
   } finally {
     await timeOutput?.close();
   }
+}
+
+/**
+ * Whether `timeout` ended the run: 124 says it did so at the limit, and 137 that the run ignored its
+ * SIGTERM and had to be killed after the grace period. A program can exit with either status on its
+ * own, so each is trusted only once the wall time reached the moment `timeout` would have produced it.
+ */
+function endedByTimeout(status: number | undefined, wallTimeSeconds: number, timeLimitSeconds: number): boolean {
+  if (status === TIMEOUT_EXIT_STATUS) return wallTimeSeconds >= timeLimitSeconds;
+  if (status === KILLED_AFTER_TIMEOUT_EXIT_STATUS) {
+    return wallTimeSeconds >= timeLimitSeconds + killGracePeriodMilliseconds / 1000;
+  }
+  return false;
 }
 
 function killSubprocessGroup(subprocess: childProcess.ChildProcess, signal: NodeJS.Signals): void {

@@ -111,6 +111,13 @@ test('reports a timeout as time limit exceeded even if the program ignores SIGTE
   expect(result.stderr).toBe('');
 });
 
+test('keeps the exit status 137 of a program that chose it just before the limit', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'sleep 0.4; exit 137'], context, 0.5);
+
+  expect(result.status).toBe(137);
+  expect(result.timeSeconds).toBeLessThan(0.5);
+});
+
 test('reports a near-zero CPU time of a program that slept past its time limit', async () => {
   const result = await spawnWithTimeout('sleep', ['30'], context, 0.5);
 

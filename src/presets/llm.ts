@@ -86,7 +86,9 @@ export async function llmJudgePreset(problemDir: string, options: LlmJudgePreset
     try {
       const { text } = await generateText({
         model: toLanguageModel(params.model),
-        prompt: options.buildPrompt?.({ prompt, testCase }) ?? prompt.replaceAll('{input}', testCase.input ?? ''),
+        ...toPromptOptions(
+          options.buildPrompt?.({ prompt, testCase }) ?? prompt.replaceAll('{input}', testCase.input ?? '')
+        ),
       });
 
       const stopTimeMilliseconds = Date.now();
@@ -117,6 +119,21 @@ export async function llmJudgePreset(problemDir: string, options: LlmJudgePreset
       break;
     }
   }
+}
+
+/**
+ * The prompt options of `generateText` for a built prompt. `ai` rejects system messages inside
+ * `messages`, so the system messages a `buildPrompt` returns become the request's instructions.
+ */
+function toPromptOptions(
+  built: string | ModelMessage[]
+): { prompt: string } | { instructions?: string; messages: ModelMessage[] } {
+  if (typeof built === 'string') return { prompt: built };
+  const instructions = built
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content)
+    .join('\n\n');
+  return { ...(instructions && { instructions }), messages: built.filter((message) => message.role !== 'system') };
 }
 
 function toLanguageModel(model: string): LanguageModel {

@@ -25,6 +25,9 @@ export interface SpawnWithLimitsResult {
 }
 
 const killGracePeriodMilliseconds = 1000;
+// GNU `timeout` exits with 124 after ending a run at its limit, or with 128 + SIGKILL when the run
+// ignored its SIGTERM and it had to be killed after the grace period.
+const TIMEOUT_EXIT_STATUSES: ReadonlySet<number | undefined> = new Set([124, 137]);
 // GNU time writes its record to a file this process opened and unlinked at once, handed down as fd 3
 // of the command and reopened by GNU time through `/dev/fd`: the command runs as the same OS user,
 // so a record reachable by path could be swapped for a fake or for a FIFO that blocks the read.
@@ -66,7 +69,9 @@ export async function spawnWithLimits(
     // in that case, and it is what normally ends a run at its limit: GNU time wraps it, so a run
     // that hit the limit still gets its CPU time recorded (a group kill from here would take GNU
     // time down with the command), and `--foreground` keeps the command in this group so the kill
-    // below still reaches every descendant. The timers below only back `timeout` up.
+    // below still reaches every descendant. The timers below only back `timeout` up. Should this
+    // process die first, `timeout` ends the command alone (`--foreground` signals no descendant),
+    // an accepted gap: the judge server sweeps every process of the request's sandbox user anyway.
     const boundedCommand: readonly [string, ...string[]] = detached
       ? [
           'timeout',
@@ -207,9 +212,10 @@ export async function spawnWithLimits(
       cpuTimeSeconds: timeResult?.cpuTimeSeconds ?? 0,
       memoryBytes: timeResult?.memoryBytes ?? 0,
       timeCommandMessage: timeResult?.message,
-      // 124 is `timeout` reporting that it had to end the run itself, unless the program exited
-      // with that status on its own before the limit.
-      timedOut: timedOut || (status === 124 && wallTimeSeconds >= context.timeLimitSeconds),
+      // 124 is `timeout` reporting that it had to end the run itself, and 137 that the run ignored its
+      // SIGTERM and had to be killed after the grace period; unless the program exited with that
+      // status on its own before the limit.
+      timedOut: timedOut || (TIMEOUT_EXIT_STATUSES.has(status) && wallTimeSeconds >= context.timeLimitSeconds),
       outputLimitExceeded,
     };
   } finally {

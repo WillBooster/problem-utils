@@ -101,6 +101,15 @@ test('reports the CPU time of a program that used up its time limit', async () =
   expect(result.stderr).toBe('');
 });
 
+test('reports a timeout as time limit exceeded even if the program ignores SIGTERM', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'trap "" TERM; sleep 30'], context, 0.5);
+
+  // `timeout` had to SIGKILL the program after its grace period and exits with 137, not 124.
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(0.5);
+  expect(result.stderr).toBe('');
+});
+
 test('reports a near-zero CPU time of a program that slept past its time limit', async () => {
   const result = await spawnWithTimeout('sleep', ['30'], context, 0.5);
 

@@ -121,19 +121,11 @@ export async function llmJudgePreset(problemDir: string, options: LlmJudgePreset
   }
 }
 
-/**
- * The prompt options of `generateText` for a built prompt. `ai` rejects system messages inside
- * `messages`, so the system messages a `buildPrompt` returns become the request's instructions.
- */
+/** `ai` rejects system messages inside `messages` unless told that a `buildPrompt` may place them there. */
 function toPromptOptions(
   built: string | ModelMessage[]
-): { prompt: string } | { instructions?: string; messages: ModelMessage[] } {
-  if (typeof built === 'string') return { prompt: built };
-  const instructions = built
-    .filter((message) => message.role === 'system')
-    .map((message) => message.content)
-    .join('\n\n');
-  return { ...(instructions && { instructions }), messages: built.filter((message) => message.role !== 'system') };
+): { prompt: string } | { messages: ModelMessage[]; allowSystemInMessages: true } {
+  return typeof built === 'string' ? { prompt: built } : { messages: built, allowSystemInMessages: true };
 }
 
 function toLanguageModel(model: string): LanguageModel {

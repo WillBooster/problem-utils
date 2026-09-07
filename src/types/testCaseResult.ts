@@ -15,7 +15,14 @@ export const testCaseResultSchema = z.object({
   stdin: z.string().optional(),
   stdout: z.string().optional(),
   stderr: z.string().optional(),
+  /** Wall time of the run; time limits are judged by it. */
   timeSeconds: z.number().optional(),
+  /**
+   * User plus system CPU time of the run. A time limit exceeded whose CPU time reaches the limit
+   * would be exceeded on any machine, while one whose CPU time stays below it may stem from waiting
+   * for a CPU shared with other programs.
+   */
+  cpuTimeSeconds: z.number().optional(),
   memoryBytes: z.number().optional(),
   feedbackMarkdown: z.string().optional(),
   /** Numeric score of a model-evaluation submission (e.g. an RMSLE value). */

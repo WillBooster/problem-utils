@@ -82,3 +82,7 @@ How a missing expectation is treated depends on the harness:
 - `evaluationJudgePreset` does not use `test_cases/`.
 
 `readTestCases` is exported for harnesses that enumerate `test_cases/` themselves.
+
+## Measurements
+
+The presets run a program under GNU time (`/usr/bin/time` on Linux, `gtime` on macOS) and report its wall time (`timeSeconds`), user plus system CPU time (`cpuTimeSeconds`), and peak resident set size (`memoryBytes`) in every test case result. Time limits are judged by wall time. The CPU time is recorded even for a run that exceeded its limit, so a judge server sharing CPUs between programs can tell a program that used up its limit (its CPU time reaches the limit, so it would exceed it anywhere) from one that may only have waited for a CPU (its CPU time stays below the limit) and re-run just the latter alone.

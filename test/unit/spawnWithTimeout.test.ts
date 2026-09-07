@@ -90,6 +90,25 @@ test('reports a timeout as time limit exceeded even if the program spawned a chi
   expect(result.timeSeconds).toBeGreaterThan(0.5);
 });
 
+test('reports the CPU time of a program that used up its time limit', async () => {
+  const result = await spawnWithTimeout('sh', ['-c', 'while :; do :; done'], context, 0.5);
+
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(0.5);
+  // The busy loop had the CPU for (almost) the whole limit; `timeout` ending the run must not lose
+  // GNU time's record, nor add its own exit status note to the program's stderr.
+  expect(result.cpuTimeSeconds).toBeGreaterThan(0.3);
+  expect(result.stderr).toBe('');
+});
+
+test('reports a near-zero CPU time of a program that slept past its time limit', async () => {
+  const result = await spawnWithTimeout('sleep', ['30'], context, 0.5);
+
+  expect(result.status).toBe(0);
+  expect(result.timeSeconds).toBeGreaterThan(0.5);
+  expect(result.cpuTimeSeconds).toBeLessThan(0.1);
+});
+
 test('preserves the exit status and stderr of the program', async () => {
   const result = await spawnWithTimeout('sh', ['-c', 'echo oops >&2; exit 7'], context, 5);
 

@@ -162,6 +162,7 @@ export async function stdioJudgePreset(problemDir: string): Promise<void> {
         stdout: buildSpawnResult.stdout.slice(0, MAX_STDOUT_LENGTH) || undefined,
         stderr: buildSpawnResult.stderr.slice(0, MAX_STDOUT_LENGTH) || undefined,
         timeSeconds: buildSpawnResult.timeSeconds,
+        cpuTimeSeconds: buildSpawnResult.cpuTimeSeconds,
         memoryBytes: buildSpawnResult.memoryBytes,
       });
       return;
@@ -236,6 +237,7 @@ export async function stdioJudgePreset(problemDir: string): Promise<void> {
       stdout: spawnResult.stdout.slice(0, MAX_STDOUT_LENGTH) || undefined,
       stderr: (judgementError ?? spawnResult.stderr).slice(0, MAX_STDOUT_LENGTH) || undefined,
       timeSeconds: spawnResult.timeSeconds,
+      cpuTimeSeconds: spawnResult.cpuTimeSeconds,
       memoryBytes: spawnResult.memoryBytes,
       outputFiles: outputFiles.length > 0 ? outputFiles : undefined,
     });
@@ -375,6 +377,7 @@ async function debugInTemporaryCopy(problemDir: string, cwd: string, params: Deb
         stdout: buildSpawnResult.stdout.slice(0, MAX_STDOUT_LENGTH) || undefined,
         stderr: buildSpawnResult.stderr.slice(0, MAX_STDOUT_LENGTH) || undefined,
         timeSeconds: buildSpawnResult.timeSeconds,
+        cpuTimeSeconds: buildSpawnResult.cpuTimeSeconds,
         memoryBytes: buildSpawnResult.memoryBytes,
       });
       return;
@@ -430,6 +433,7 @@ async function debugInTemporaryCopy(problemDir: string, cwd: string, params: Deb
     stdout: spawnResult.stdout.slice(0, MAX_STDOUT_LENGTH) || undefined,
     stderr: spawnResult.stderr.slice(0, MAX_STDOUT_LENGTH) || undefined,
     timeSeconds: spawnResult.timeSeconds,
+    cpuTimeSeconds: spawnResult.cpuTimeSeconds,
     memoryBytes: spawnResult.memoryBytes,
     outputFiles: outputFiles.length > 0 ? outputFiles : undefined,
   });

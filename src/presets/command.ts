@@ -60,7 +60,7 @@ export interface CommandRunResult {
   stderr: string;
   status: number | undefined;
   timeSeconds: number;
-  /** See `TestCaseResult.cpuTimeSeconds`; a custom `run` may leave it out. */
+  /** See `TestCaseResult.cpuTimeSeconds`; a custom `runCommand` may leave it out. */
   cpuTimeSeconds?: number;
   memoryBytes: number;
   outputLimitExceeded?: boolean;

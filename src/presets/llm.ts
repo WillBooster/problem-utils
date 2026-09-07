@@ -86,7 +86,9 @@ export async function llmJudgePreset(problemDir: string, options: LlmJudgePreset
     try {
       const { text } = await generateText({
         model: toLanguageModel(params.model),
-        prompt: options.buildPrompt?.({ prompt, testCase }) ?? prompt.replaceAll('{input}', testCase.input ?? ''),
+        ...toPromptOptions(
+          options.buildPrompt?.({ prompt, testCase }) ?? prompt.replaceAll('{input}', testCase.input ?? '')
+        ),
       });
 
       const stopTimeMilliseconds = Date.now();
@@ -117,6 +119,13 @@ export async function llmJudgePreset(problemDir: string, options: LlmJudgePreset
       break;
     }
   }
+}
+
+/** `ai` rejects system messages inside `messages` unless told that a `buildPrompt` may place them there. */
+function toPromptOptions(
+  built: string | ModelMessage[]
+): { prompt: string } | { messages: ModelMessage[]; allowSystemInMessages: true } {
+  return typeof built === 'string' ? { prompt: built } : { messages: built, allowSystemInMessages: true };
 }
 
 function toLanguageModel(model: string): LanguageModel {

@@ -29,6 +29,7 @@ export interface SpawnWithLimitsResult {
 }
 
 const killGracePeriodMilliseconds = 1000;
+const MIN_TIMEOUT_SECONDS = 0.001;
 // GNU `timeout` exits with 124 after ending a run at its limit, or with 128 + SIGKILL when the run
 // ignored its SIGTERM and it had to be killed after the grace period.
 const TIMEOUT_EXIT_STATUSES: ReadonlySet<number | undefined> = new Set([124, 137]);
@@ -40,7 +41,7 @@ const TIME_OUTPUT_FD = 3;
 const TIME_OUTPUT_TAIL_BYTES = 4096;
 const timeCommand = resolveTimeCommand();
 
-/** Whether GNU time is available, i.e. whether `timeSeconds` and `memoryBytes` are measured at all. */
+/** Whether GNU time is available, i.e. whether `timeSeconds`, `cpuTimeSeconds`, and `memoryBytes` are measured at all. */
 export const isTimeCommandAvailable = timeCommand !== undefined;
 
 // The commands run in their own sessions, so they outlive this process unless it ends them itself
@@ -82,7 +83,8 @@ export async function spawnWithLimits(
           '--foreground',
           '-k',
           String(killGracePeriodMilliseconds / 1000),
-          String(context.timeLimitSeconds),
+          // A zero duration would disable `timeout`; the front matter allows a zero time limit.
+          String(Math.max(context.timeLimitSeconds, MIN_TIMEOUT_SECONDS)),
           ...command,
         ]
       : command;
@@ -95,7 +97,8 @@ export async function spawnWithLimits(
     const timeLimitMilliseconds = detached
       ? context.timeLimitSeconds * 1000 + 2 * killGracePeriodMilliseconds
       : context.timeLimitSeconds * 1000;
-    const startTimeMilliseconds = Date.now();
+    // Monotonic: a wall-clock step must not turn a run `timeout` ended into one that finished in time.
+    const startTimeMilliseconds = performance.now();
     // The standard streams are always pipes; the type cannot express that with the extra entry.
     const subprocess = childProcess.spawn(spawnedCommand[0], spawnedCommand.slice(1), {
       cwd: context.cwd,
@@ -163,9 +166,10 @@ export async function spawnWithLimits(
         const failAfterClose = (error: Error): void => {
           if (settled) return;
           if (subprocess.pid === undefined) {
-            // The spawn itself failed, i.e. the head of the chain (`timeout` here, the command
-            // itself on Windows) or the cwd is missing. GNU time reports a missing judged command
-            // as status 127 instead. Report this like a run that produced only this message.
+            // The spawn itself failed, i.e. the head of the chain (GNU time, or `timeout` without
+            // it, or the command itself on Windows) or the cwd is missing. A missing judged command
+            // is reported as status 127 by the wrapper instead. Report this like a run that produced
+            // only this message.
             spawnErrorMessage = error.message;
             settle(undefined, undefined);
             return;
@@ -185,7 +189,7 @@ export async function spawnWithLimits(
           // keep the output read so far.
           clearTimeout(timeout);
           clearTimeout(killTimeout);
-          wallTimeSeconds = (Date.now() - startTimeMilliseconds) / 1000;
+          wallTimeSeconds = (performance.now() - startTimeMilliseconds) / 1000;
           killSubprocessGroup(subprocess, 'SIGKILL');
           closeTimeout = setTimeout(() => {
             subprocess.stdout.destroy();

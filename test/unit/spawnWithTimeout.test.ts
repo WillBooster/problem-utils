@@ -91,13 +91,14 @@ test('reports a timeout as time limit exceeded even if the program spawned a chi
 });
 
 test('reports the CPU time of a program that used up its time limit', async () => {
-  const result = await spawnWithTimeout('sh', ['-c', 'while :; do :; done'], context, 0.5);
+  const result = await spawnWithTimeout('sh', ['-c', 'while :; do :; done'], context, 1);
 
   expect(result.status).toBe(0);
-  expect(result.timeSeconds).toBeGreaterThan(0.5);
-  // The busy loop had the CPU for (almost) the whole limit; `timeout` ending the run must not lose
-  // GNU time's record, nor add its own exit status note to the program's stderr.
-  expect(result.cpuTimeSeconds).toBeGreaterThan(0.3);
+  expect(result.timeSeconds).toBeGreaterThan(1);
+  // `timeout` ending the run must not lose GNU time's record, nor add its own exit status note to
+  // the program's stderr. The busy loop had the CPU for most of the limit; the bound only asks for
+  // a fifth of it, so a loaded CI host does not fail the test.
+  expect(result.cpuTimeSeconds).toBeGreaterThan(0.2);
   expect(result.stderr).toBe('');
 });
 

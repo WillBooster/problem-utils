@@ -259,6 +259,8 @@ async function hasExpectedFiles(fileOutputPath: string | undefined): Promise<boo
  * A preset debug function using stdin and stdout as test cases. The answer directory is copied to a
  * temporary directory where it is built and run together with `_shared.fin/` and the first example
  * case's `.fin/`; files the program writes are reported only through `requiredOutputFilePaths`.
+ * Callers that own and remove the working directory can set `disposableWorkingDirectory` to run
+ * directly there; they are responsible for cleanup even when the harness is terminated.
  *
  * A standard stdio problem must NOT commit a `debug.ts` that only calls this preset: the Exercode
  * server applies this preset automatically when `debug.ts` is absent, and committed copies would
@@ -270,10 +272,19 @@ async function hasExpectedFiles(fileOutputPath: string | undefined): Promise<boo
  * bun x exercode-problem debug model_answers/java '{ "stdin": "1 2" }'
  * ```
  */
-export async function stdioDebugPreset(problemDir: string): Promise<void> {
+export async function stdioDebugPreset(
+  problemDir: string,
+  options: { disposableWorkingDirectory?: boolean } = {}
+): Promise<void> {
   const args = parseArgs(process.argv);
   if (!args.cwd) throw new Error('cwd argument required');
   const params = debugParamsSchema.parse(args.params);
+
+  // The judge server already owns and removes its per-request answer directory.
+  if (options.disposableWorkingDirectory) {
+    await debugInWorkingDirectory(problemDir, args.cwd, params);
+    return;
+  }
 
   // Everything (build, input files, run) happens in a disposable copy of the answer directory, so
   // the developer's files are never touched and whatever the submission leaves behind goes with it.
@@ -290,7 +301,7 @@ export async function stdioDebugPreset(problemDir: string): Promise<void> {
   process.once('SIGTERM', removeOnSignal);
   try {
     const copy = await copyProblemDirToTemporaryRoot(args.cwd, { onTempRootCreated: (root) => (tempRoot = root) });
-    await debugInTemporaryCopy(problemDir, copy.copiedProblemDir, params);
+    await debugInWorkingDirectory(problemDir, copy.copiedProblemDir, params);
   } finally {
     if (tempRoot !== undefined) await forciblyRemoveDirectory(tempRoot);
     process.off('SIGINT', removeOnSignal);
@@ -298,7 +309,7 @@ export async function stdioDebugPreset(problemDir: string): Promise<void> {
   }
 }
 
-async function debugInTemporaryCopy(problemDir: string, cwd: string, params: DebugParams): Promise<void> {
+async function debugInWorkingDirectory(problemDir: string, cwd: string, params: DebugParams): Promise<void> {
   const problemMarkdownFrontMatter = await readProblemMarkdownFrontMatter(problemDir);
 
   const originalMainFilePath = await findEntryPointFile(cwd, params.language);

@@ -22,6 +22,12 @@ export async function judgeByStaticAnalysis(
     'forbiddenRegExpsInCode' | 'forbiddenTextsInCode' | 'requiredRegExpsInCode' | 'requiredSubmissionFilePaths'
   >
 ): Promise<Pick<TestCaseResult, 'decisionCode' | 'feedbackMarkdown'> | undefined> {
+  const needsSourceCode =
+    !!problemMarkdownFrontMatterLike.forbiddenRegExpsInCode?.length ||
+    !!problemMarkdownFrontMatterLike.forbiddenTextsInCode?.length ||
+    !!problemMarkdownFrontMatterLike.requiredRegExpsInCode?.length;
+  if (!needsSourceCode && !problemMarkdownFrontMatterLike.requiredSubmissionFilePaths?.length) return;
+
   const filePathSet = new Set<string>();
   const sourceCodeWithoutCommentFiles: { path: string; data: string }[] = [];
 
@@ -31,12 +37,13 @@ export async function judgeByStaticAnalysis(
     const relativePath = path.relative(cwd, path.join(dirent.parentPath, dirent.name));
     filePathSet.add(relativePath);
 
+    if (!needsSourceCode) continue;
+    const languageDefinition = findLanguageDefinitionByPath(dirent.name);
+    if (!languageDefinition) continue;
+
     const text = await fs.promises.readFile(path.join(dirent.parentPath, dirent.name), 'utf8');
     const isBinary = text.includes('\uFFFD');
     if (isBinary) continue;
-
-    const languageDefinition = findLanguageDefinitionByPath(dirent.name);
-    if (!languageDefinition) continue;
 
     sourceCodeWithoutCommentFiles.push({
       path: relativePath,
